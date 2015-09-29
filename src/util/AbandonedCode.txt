@@ -1,0 +1,153 @@
+////////////////////////////////////////////////////////////////////////////////
+//From <CLASS>, <DATE> - <AUTHOR OF REMOVAL>:
+//  <REASON>
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+//From OverworldArea, Oct 29, 2013 - zadjii:
+//  Code was no longer used. Very long method. Better to remove it.
+////////////////////////////////////////////////////////////////////////////////
+    private void generateBasicVillage(){
+        /**
+         ** Determine # of buildings.
+         ** randomly determine what buildings to place
+         * for each building
+         *      if a building has been placed,
+         *          chose a spot near another building
+         *      else choose a spot
+         *      check if it is clear
+         *      if so, place building
+         *      else, loop
+         */
+
+        ArrayList<Building> buildings = new ArrayList<Building>();
+        int numBuildings = (int)(((float)size/(float)64) * 13.5f);
+
+        int placedBuildings = 0;
+        for(int i = 0; i < numBuildings; i++){
+            Building b;
+            //Buildings are being initialized at 0,0.
+            //They will be moved to their proper locations later.
+            int chance = rand.nextInt(9);
+            switch(chance){
+                case 0:b = new Hut(0,0);break;
+                case 1:b = new CraftingHut(0,0);break;
+                case 2:b = new Smithy(0,0);break;
+                case 3:b = new Field(0,0);break;
+                case 4:b = new House(0,0);break;
+                default:
+                    if(chance%2 == 0 )b= new Hut(0,0);
+                    else b = new Field(0,0);
+                    break;
+            }
+            buildings.add(b);
+        }
+        for(Building b: buildings){
+
+            Point placement;
+            b.setProgress(100);
+            WHILE:while (true){
+
+                if(placedBuildings > 0){
+                    int index = rand.nextInt(placedBuildings>1?placedBuildings/2:placedBuildings);
+                    Point nearby =
+                            buildings.get(index).getLoc();
+                    int dist = b.getGridSize() + rand.nextInt(4);
+                    int x = (rand.nextBoolean()?-1:1) * (rand.nextInt(dist) + 6);
+                    int y = (rand.nextBoolean()?-1:1) * (rand.nextInt(dist) + 6);
+
+                    x += nearby.getX()/16;
+                    y += nearby.getY()/16;
+
+                    placement = new Point(x*16,y*16);
+                }
+                else{
+                    int x = rand.nextInt((size)/2) + ((size)/4);
+                    int y = rand.nextInt((size)/2) + ((size)/4);
+                    placement = new Point(x*16,y*16);
+                }
+                b.setXY(placement.getX(), placement.getY());
+                boolean placeable = false;
+                //determine placeability
+                PLACEABILITY:{
+                    int x0 = placement.getX()/16;
+                    int y0 = placement.getY()/16;
+
+                    for (int x = -10; x < 10;x++){
+                        for (int y= -10; y < 10;y++){
+                            try{
+                                Interactable inter = this.interactables[x0+x][y0+y];
+                                if(inter!=null){
+                                    if(!inter.aestheticOnly()
+                                            &&inter.getAbsHitbox().intersects(b.getAbsHitbox())){
+                                        break PLACEABILITY;
+                                    }
+                                }
+                            }catch (IndexOutOfBoundsException e1){}
+
+
+                        }
+                    }
+                    try{
+                        for (int x = 0; x < b.getWidth()/16;x++){
+                            for (int y= 0; y < b.getHeight()/16;y++){
+                                Interactable interactable = interactables[x0+x][y0+y];
+                            }
+                        }
+                    }catch (IndexOutOfBoundsException e){
+                        break PLACEABILITY;
+                    }
+                    placeable = true;
+
+                }
+                if(placeable){
+
+                    break WHILE;
+                }
+
+            }//end while
+            //place building
+            b.setXY(placement.getX(), placement.getY());
+            int x0 = placement.getX()/16;
+            int y0 = placement.getY()/16;
+            placedBuildings++;
+            for (int x = 0; x < b.getWidth()/16;x++){
+                for (int y= 0; y < b.getHeight()/16;y++){
+                    if(!b.isPassable())passable[x0+x][y0+y] = false;
+                    resources[x0+x][y0+y] = null;
+                    interactables[x0+x][y0+y] = null;
+//					map[x0+x][y0+y] = Tiles.COBBLEROAD;
+
+
+
+                }
+            }
+            interactables[x0+(int)b.getWidth()/16 - 1][y0+(int)b.getHeight()/16 - 1] = b;
+
+        }
+        Color shirt = new Color(rand.nextInt(255),rand.nextInt(255),rand.nextInt(255));
+        Color pants = new Color(rand.nextInt(255),rand.nextInt(255),rand.nextInt(255));
+        Color skin = new Color(214,200,127);
+        for(Building b:buildings){
+
+            Human human = new Human();
+            human.setTorsoColor(shirt);
+            human.setPantsColor(pants);
+            human.setSkinColor(skin);
+            NewVillager villager = new NewVillager(human);
+//			SteelDagger dagger = new SteelDagger();
+//			human.setEquippedItem(dagger);
+//			dagger.equip(human);
+            villager.setTeam(Constants.PLAYERTEAM);
+            human.setXY(b.getX()+b.getWidth()/2, b.getY() + b.getHeight() + 16);
+            if(!passable[human.getXi()/16][human.getYi()/16])continue;
+            this.getPersonas().add(villager);
+        }
+
+    }
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
