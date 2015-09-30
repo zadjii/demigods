@@ -16,3 +16,10 @@ hs_err_pid*
 
 # intellij lol
 .idea
+
+# output/library directories
+out/
+lib/
+
+# OS X stuff
+.DS_Store
